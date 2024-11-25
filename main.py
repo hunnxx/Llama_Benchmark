@@ -10,6 +10,7 @@ from transformers import MllamaProcessor, MllamaForConditionalGeneration
 
 from utils import DocVQADataset
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--bench_type", type=str, default="docqa", help="Type of benchmark")
 parser.add_argument("--device", type=str, default="auto", help="cuda for gpu | auto for multiple gpu")
@@ -68,8 +69,12 @@ def prepare_model(args):
 
 
 def main():
-    docvqa_dataset = DocVQADataset(file_path='data/docvqa/test.jsonl')
-    docvqa_dataloader = DataLoader(docvqa_dataset, batch_size=args.batch_size, shuffle=False)
+    if args.bench_type == 'docvqa_val':
+        docvqa_dataset = DocVQADataset(file_path='data/docvqa/val.jsonl')
+        docvqa_dataloader = DataLoader(docvqa_dataset, batch_size=args.batch_size, shuffle=False)
+    elif args.bench_type == 'docvqa_test':
+        docvqa_dataset = DocVQADataset(file_path='data/docvqa/test.jsonl')
+        docvqa_dataloader = DataLoader(docvqa_dataset, batch_size=args.batch_size, shuffle=False)
 
     processor, model = prepare_model(args)
 
@@ -87,7 +92,7 @@ def main():
             answer = postprocessing_data(gen_out)
             results.append({"questionId": input_q_ids[gen_idx].item(), "answer": answer})
 
-    with open('data/docvqa/test_results.json', 'w') as file:
+    with open(f'data/docvqa/{args.bench_type}_results.json', 'w') as file:
         json.dump(results, file)
 
 
